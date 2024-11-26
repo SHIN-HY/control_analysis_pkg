@@ -10,8 +10,9 @@ ControlAnalysis::ControlAnalysis(const rclcpp::NodeOptions & node_options) : Nod
         "/CarMaker/status/steering_angle", rclcpp::QoS(1), std::bind(&ControlAnalysis::statusCallback, this,std::placeholders::_1));
 
     pub_can_ = this->create_publisher<can_msgs::msg::Frame>("/to_can_bus", rclcpp::QoS(1));
+    pub_steering_command_ = this->create_publisher<std_msgs::msg::Float64>("/steering_cmd_debug", rclcpp::QoS(1));
     
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&ControlAnalysis::timerCallback, this));
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&ControlAnalysis::timerCallback, this));
 }
 
 void ControlAnalysis::statusCallback(const std_msgs::msg::Float64::SharedPtr msg)
@@ -94,7 +95,7 @@ bool ControlAnalysis::startStepCommand(const float time_elapsed, const rclcpp::T
     }
     else if(time_elapsed >= 4.0f)
     {
-        steering_cmd = 1.5f;
+        steering_cmd = 0.3f;
     }
 
     status_.steering_command_vec.push_back(steering_cmd);
@@ -116,7 +117,9 @@ bool ControlAnalysis::startStepCommand(const float time_elapsed, const rclcpp::T
     can_data.data[3] = 1;
 
     pub_can_->publish(can_data);
-
+    std_msgs::msg::Float64 debug_msg;
+    debug_msg.data = steering_cmd;
+    pub_steering_command_->publish(debug_msg);
     return false;
 }
 
@@ -154,7 +157,9 @@ bool ControlAnalysis::startSinewaveCommand(const float time_elapsed)
     can_data.data[3] = 1;
     
     pub_can_->publish(can_data);
-
+    std_msgs::msg::Float64 debug_msg;
+    debug_msg.data = steering_cmd;
+    pub_steering_command_->publish(debug_msg);
     return false;
 }
 

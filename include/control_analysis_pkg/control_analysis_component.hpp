@@ -39,6 +39,7 @@ class ControlAnalysis : public rclcpp::Node
         rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr steering_status_sub;
 
         rclcpp::Publisher<can_msgs::msg::Frame>::SharedPtr pub_can_;
+        rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_steering_command_;
 
         rclcpp::TimerBase::SharedPtr timer_;
 
