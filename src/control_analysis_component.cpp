@@ -94,7 +94,7 @@ bool ControlAnalysis::startStepCommand(const float time_elapsed, const rclcpp::T
     }
     else if(time_elapsed >= 4.0f)
     {
-        steering_cmd = 2.0;
+        steering_cmd = 1.5f;
     }
 
     status_.steering_command_vec.push_back(steering_cmd);
@@ -131,8 +131,9 @@ bool ControlAnalysis::startSinewaveCommand(const float time_elapsed)
     }
     else if(time_elapsed > 3.0f)
     {
-        sinewave_count_ += 0.1;
+        sinewave_count_ += 0.01f;
         steering_cmd = std::sin(sinewave_count_);
+        steering_cmd *= 0.1f;
     }
 
     status_.steering_command_vec.push_back(steering_cmd);
