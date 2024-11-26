@@ -1,0 +1,8 @@
+<launch>
+    <node_container pkg="rclcpp_components" exec="component_container" name="control_analysis_container" namespace="" args="test_args">
+    <composable_node pkg="control_analysis_pkg" plugin="control_analysis_component_ns::ControlAnalysis" name="ControlAnalysis" namespace="">
+      <extra_arg name="use_intra_process_comms" value="true"/>
+      <param from="$(find-pkg-share control_analysis_pkg)/config/temp_param.param.yaml"/>
+    </composable_node>
+  </node_container>
+</launch>
