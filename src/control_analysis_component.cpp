@@ -7,11 +7,11 @@ ControlAnalysis::ControlAnalysis(const rclcpp::NodeOptions & node_options) : Nod
     temp_param_num_ = this->declare_parameter("temp_param_num", false);
 
     steering_status_sub = this->create_subscription<std_msgs::msg::Float64>(
-        "/CarMaker/status/steering_angle", rclcpp::QoS(1), std::bind(&ControlAnalysis::statusCallback, this,std::placeholders::_1));
+        "/twist_controller/input/steering_status", rclcpp::QoS(1), std::bind(&ControlAnalysis::statusCallback, this,std::placeholders::_1));
 
-    control_command_pub = this->create_publisher<std_msgs::msg::Float64>("/twist_controller/command/steering_angle", rclcpp::QoS(1));
+    control_command_pub = this->create_publisher<std_msgs::msg::Float64>("/twist_controller/input/steering_cmd", rclcpp::QoS(1));
 
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&ControlAnalysis::timerCallback, this));
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&ControlAnalysis::timerCallback, this));
 }
 
 void ControlAnalysis::statusCallback(const std_msgs::msg::Float64::SharedPtr msg)
@@ -94,7 +94,7 @@ bool ControlAnalysis::startStepCommand(const float time_elapsed, const rclcpp::T
     }
     else if(time_elapsed >= 4.0f)
     {
-        command_msg.data = 2.0;
+        command_msg.data = 1.5f;
     }
 
     status_.steering_command_vec.push_back(command_msg.data);
@@ -122,8 +122,9 @@ bool ControlAnalysis::startSinewaveCommand(const float time_elapsed)
     }
     else if(time_elapsed > 3.0f)
     {
-        sinewave_count_ += 0.1;
+        sinewave_count_ += 0.01f;
         command_msg.data = std::sin(sinewave_count_);
+        command_msg.data *= 0.1f;
     }
 
     status_.steering_command_vec.push_back(command_msg.data);
