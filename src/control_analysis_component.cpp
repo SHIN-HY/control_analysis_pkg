@@ -9,8 +9,8 @@ ControlAnalysis::ControlAnalysis(const rclcpp::NodeOptions & node_options) : Nod
     steering_status_sub = this->create_subscription<std_msgs::msg::Float64>(
         "/CarMaker/status/steering_angle", rclcpp::QoS(1), std::bind(&ControlAnalysis::statusCallback, this,std::placeholders::_1));
 
-    control_command_pub = this->create_publisher<std_msgs::msg::Float64>("/twist_controller/command/steering_angle", rclcpp::QoS(1));
-
+    pub_can_ = this->create_publisher<can_msgs::msg::Frame>("/to_can_bus", rclcpp::QoS(1));
+    
     timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&ControlAnalysis::timerCallback, this));
 }
 
@@ -85,19 +85,19 @@ void ControlAnalysis::timerCallback()
 
 bool ControlAnalysis::startStepCommand(const float time_elapsed, const rclcpp::Time current_time)
 {
-    std_msgs::msg::Float64 command_msg;
+    float steering_cmd;
     status_.steering_status_vec.push_back(status_.steering_status);
 
     if(time_elapsed < 4.0f)
     {
-        command_msg.data = 0.0;
+        steering_cmd = 0.0;
     }
     else if(time_elapsed >= 4.0f)
     {
-        command_msg.data = 2.0;
+        steering_cmd = 2.0;
     }
 
-    status_.steering_command_vec.push_back(command_msg.data);
+    status_.steering_command_vec.push_back(steering_cmd);
     // RCLCPP_INFO_THROTTLE(this->get_logger(),*this->get_clock(),2000,"On step command...");
 
     if(time_elapsed > 8.0f)
@@ -107,26 +107,35 @@ bool ControlAnalysis::startStepCommand(const float time_elapsed, const rclcpp::T
         return true;
     }
 
-    control_command_pub->publish(command_msg);
+    const uint8_t steer_can = static_cast<uint8_t>(std::clamp((-steering_cmd * STEERCMD2SIG) + STEERCMD_OFFSET, 0.0, 255.0));
+
+    can_msgs::msg::Frame can_data;
+    can_data.id = 320;
+    can_data.dlc = 4;
+    can_data.data[1] = steer_can;
+    can_data.data[3] = 1;
+
+    pub_can_->publish(can_data);
+
     return false;
 }
 
 bool ControlAnalysis::startSinewaveCommand(const float time_elapsed)
 {
-    std_msgs::msg::Float64 command_msg;
+    float steering_cmd;
     status_.steering_status_vec.push_back(status_.steering_status);
 
     if(time_elapsed < 3.0f)
     {
-        command_msg.data = 0.0;
+        steering_cmd = 0.0;
     }
     else if(time_elapsed > 3.0f)
     {
         sinewave_count_ += 0.1;
-        command_msg.data = std::sin(sinewave_count_);
+        steering_cmd = std::sin(sinewave_count_);
     }
 
-    status_.steering_command_vec.push_back(command_msg.data);
+    status_.steering_command_vec.push_back(steering_cmd);
     // RCLCPP_INFO_THROTTLE(this->get_logger(),*this->get_clock(),2000,"On sinewave command...");
     
     if(time_elapsed >= 20.0f)
@@ -135,7 +144,16 @@ bool ControlAnalysis::startSinewaveCommand(const float time_elapsed)
         return true;
     }
 
-    control_command_pub->publish(command_msg);
+    const uint8_t steer_can = static_cast<uint8_t>(std::clamp((-steering_cmd * STEERCMD2SIG) + STEERCMD_OFFSET, 0.0, 255.0));
+
+    can_msgs::msg::Frame can_data;
+    can_data.id = 320;
+    can_data.dlc = 4;
+    can_data.data[1] = steer_can;
+    can_data.data[3] = 1;
+    
+    pub_can_->publish(can_data);
+
     return false;
 }
 

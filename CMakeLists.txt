@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(can_msgs REQUIRED)
 
 include_directories(include)
 
@@ -22,6 +23,7 @@ ament_target_dependencies(
   rclcpp
   rclcpp_components
   std_msgs
+  can_msgs
 )
 
 rclcpp_components_register_nodes(

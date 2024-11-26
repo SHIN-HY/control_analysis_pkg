@@ -3,6 +3,10 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include "std_msgs/msg/float64.hpp"
+#include "can_msgs/msg/frame.hpp"
+
+#define STEERCMD2SIG 242.552
+#define STEERCMD_OFFSET 127.0
 
 namespace control_analysis_component_ns
 {
@@ -33,7 +37,8 @@ class ControlAnalysis : public rclcpp::Node
         };
 
         rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr steering_status_sub;
-        rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr control_command_pub;
+
+        rclcpp::Publisher<can_msgs::msg::Frame>::SharedPtr pub_can_;
 
         rclcpp::TimerBase::SharedPtr timer_;
 
